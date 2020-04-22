@@ -43,8 +43,8 @@ public class ChatClient {
             }
         });
         Scanner scanner = new Scanner(System.in);
-        String line;
-        while ((line = scanner.nextLine()) != null) {
+        while (scanner.hasNextLine()) {
+            String line = scanner.nextLine();
             if (finished.get()) {
                 break;
             }

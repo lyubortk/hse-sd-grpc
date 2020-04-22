@@ -67,8 +67,8 @@ public class ChatServer extends ChatGrpc.ChatImplBase {
         server.start();
 
         Scanner scanner = new Scanner(System.in);
-        String line;
-        while ((line = scanner.nextLine()) != null) {
+        while (scanner.hasNextLine()) {
+            String line = scanner.nextLine();
             if (serverImpl.getFinished().get()) {
                 break;
             }
