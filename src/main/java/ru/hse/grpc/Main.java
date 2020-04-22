@@ -2,7 +2,7 @@ package ru.hse.grpc;
 
 public class Main {
     public static void printUsage() {
-        System.err.println("Usage: ./gradlew run "); //TODO
+        System.err.println("Usage: ./gradlew run --args='username [host] port'"); //TODO
     }
 
     public static void main(String[] args) {

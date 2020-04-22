@@ -5,12 +5,17 @@ import io.grpc.ServerBuilder;
 import io.grpc.stub.StreamObserver;
 
 import java.io.IOException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Scanner;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class ChatServer extends ChatGrpc.ChatImplBase {
     private final String name;
     private final AtomicReference<StreamObserver<Model.ChatMessage>> responseObserverReference = new AtomicReference<>();
+    private final AtomicBoolean finished = new AtomicBoolean(false);
 
     public ChatServer(String name) {
         this.name = name;
@@ -18,6 +23,10 @@ public class ChatServer extends ChatGrpc.ChatImplBase {
 
     public AtomicReference<StreamObserver<Model.ChatMessage>> getResponseObserverReference() {
         return responseObserverReference;
+    }
+
+    public AtomicBoolean getFinished() {
+        return finished;
     }
 
 
@@ -31,16 +40,22 @@ public class ChatServer extends ChatGrpc.ChatImplBase {
         return new StreamObserver<Model.ChatMessage>() {
             @Override
             public void onNext(Model.ChatMessage value) {
-                System.out.println(value.getName() + " " + value.getText());
+                long timeStamp = value.getTimestamp();
+                DateFormat simple = new SimpleDateFormat("dd MMM yyyy HH:mm:ss:SSS Z");
+                Date result = new Date(timeStamp);
+                String time = simple.format(result);
+                System.out.println("<" + time + ">: [" + value.getName() + "]: " + value.getText());
             }
 
             @Override
             public void onError(Throwable t) {
+                finished.set(true);
                 System.err.println(t.getMessage());
             }
 
             @Override
             public void onCompleted() {
+                finished.set(true);
                 System.out.println("Completed messaging with client");
             }
         };
@@ -48,24 +63,29 @@ public class ChatServer extends ChatGrpc.ChatImplBase {
 
     public static void run(String name, int port) throws IOException, InterruptedException {
         ChatServer serverImpl = new ChatServer(name);
-
-        Thread stdinReader = new Thread(() -> {
-            Scanner scanner = new Scanner(System.in);
-            String line;
-            while ((line = scanner.nextLine()) != null) {
-                var observer = serverImpl.responseObserverReference.get();
-                if (observer != null) {
-                    observer.onNext(Model.ChatMessage.newBuilder()
-                            .setName(name)
-                            .setText(line)
-                            .setTimestamp(System.currentTimeMillis())
-                            .build());
-                }
-            }
-        });
-
         Server server = ServerBuilder.forPort(port).addService(serverImpl).build();
         server.start();
+
+        Scanner scanner = new Scanner(System.in);
+        String line;
+        while ((line = scanner.nextLine()) != null) {
+            if (serverImpl.getFinished().get()) {
+                break;
+            }
+            var observer = serverImpl.responseObserverReference.get();
+            if (observer != null) {
+                observer.onNext(Model.ChatMessage.newBuilder()
+                        .setName(name)
+                        .setText(line)
+                        .setTimestamp(System.currentTimeMillis())
+                        .build());
+            }
+        }
+        var observer = serverImpl.responseObserverReference.get();
+        if (observer != null) {
+            observer.onCompleted();
+        }
+        server.shutdownNow();
         server.awaitTermination();
     }
 }
