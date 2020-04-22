@@ -1,2 +1,2 @@
-Server: `./gradlew run --args='username port'"`
-Client: `./gradlew run --args='username host port'"`
+Server: `./gradlew run --args='username port' --console=plain "`
+Client: `./gradlew run --args='username host port' --console=plain "`
