@@ -36,7 +36,7 @@ javafx {
     modules = [ 'javafx.controls' ]
 }
 
-mainClassName = 'ru.hse.grpc.MessagesFX'
+mainClassName = 'ru.hse.grpc.Main'
 
 dependencies {
     compile 'com.google.protobuf:protobuf-java:3.11.4'
