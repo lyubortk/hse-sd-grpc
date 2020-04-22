@@ -32,11 +32,11 @@ protobuf {
 }
 
 javafx {
-    version = "11.0.2"
+    version = "14"
     modules = [ 'javafx.controls' ]
 }
 
-mainClassName = 'ru.hse.grpc.Main'
+mainClassName = 'ru.hse.grpc.MessagesFX'
 
 dependencies {
     compile 'com.google.protobuf:protobuf-java:3.11.4'
