@@ -23,12 +23,9 @@ protobuf {
     }
     generateProtoTasks {
         all()*.plugins {
-            grpc {
-//                outputSubDir = 'java'
-            }
+            grpc {}
         }
     }
-//    generatedFilesBaseDir = "$projectDir/src"
 }
 
 dependencies {
