@@ -10,9 +10,7 @@ import java.util.concurrent.CountDownLatch;
 public class ChatClient {
     public static void run(String name, String address, int port) throws InterruptedException {
         ManagedChannel channel = ManagedChannelBuilder.forAddress(address, port).usePlaintext().build();
-
         ChatGrpc.ChatStub service = ChatGrpc.newStub(channel);
-
         CountDownLatch finishedLatch = new CountDownLatch(1);
 
         StreamObserver<Model.ChatMessage> observer = service.stream(new StreamObserver<Model.ChatMessage>() {
