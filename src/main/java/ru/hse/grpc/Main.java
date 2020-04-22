@@ -13,6 +13,8 @@ import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 
+import java.io.IOException;
+
 public class Main extends Application {
     public static void main(String[] args) {
         launch();
@@ -68,15 +70,29 @@ public class Main extends Application {
         grid.setVgap(12);
         grid.setAlignment(Pos.CENTER);
 
-        Label lblName = new Label("Address of server");
-        TextField tfName = new TextField();
+        Label lblServer = new Label("Address");
+        TextField tfServer = new TextField();
+
+        Label lblPort = new Label("Port");
+        TextField tfPort = new TextField();
 
         Button start = new Button("Start");
-        start.setOnMouseClicked(event -> new Chat().start(stage));
+        start.setOnMouseClicked(event -> {
+            new Chat(userName).start(stage);
+            try {
+                ChatClient.run(userName, tfServer.getCharacters().toString(), Integer.parseInt(tfPort.getCharacters().toString()));
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        });
 
-        grid.add(lblName, 0, 0);
-        grid.add(tfName, 1, 0);
+        grid.add(lblServer, 0, 0);
+        grid.add(tfServer, 1, 0);
+
+        grid.add(lblPort, 0, 1);
+        grid.add(tfPort, 1, 1);
         grid.add(start, 1, 2, 2, 1);
+
 
         Scene scene = new Scene(grid);
         stage.setScene(scene);
@@ -93,7 +109,14 @@ public class Main extends Application {
         TextField tfPort = new TextField();
 
         Button start = new Button("Start");
-        start.setOnMouseClicked(event -> new Chat().start(stage));
+        start.setOnMouseClicked(event -> {
+            new Chat(userName).start(stage);
+            try {
+                ChatServer.run(userName, Integer.parseInt(tfPort.getCharacters().toString()));
+            } catch (IOException | InterruptedException e) {
+                e.printStackTrace();
+            }
+        });
 
         grid.add(lblPort, 0, 0);
         grid.add(tfPort, 1, 0);
