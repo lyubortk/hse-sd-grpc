@@ -1,5 +1,6 @@
 package ru.hse.grpc;
 
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Orientation;
@@ -7,17 +8,22 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 
 public class Chat implements Ui {
     private final ObservableList<String> msgs = FXCollections.<String>observableArrayList();
     private final String userName;
-    private BiFunction<String, String, Void> callback;
+    private BiConsumer<String, String> callback;
 
     public Chat(String userName) {
         this.userName = userName;
@@ -31,11 +37,20 @@ public class Chat implements Ui {
 
         TextField message = new TextField();
         Button send = new Button("send");
-        send.setOnAction(e -> {
-            msgs.add("[" + userName + "]" + ": " + message.getCharacters().toString());
-            callback.apply(userName, message.getCharacters().toString());
-            message.clear();
-            message.requestFocus();
+        long timeStamp = System.currentTimeMillis();
+        DateFormat simple = new SimpleDateFormat("dd MMM yyyy HH:mm:ss:SSS Z");
+        Date result = new Date(timeStamp);
+        String time = simple.format(result);
+
+        send.setOnMouseClicked(e -> {
+            sendMessage(time, message);
+        });
+
+
+        send.setOnKeyPressed(e -> {
+            if (e.getCode() == KeyCode.ENTER) {
+                sendMessage(time, message);
+            }
         });
 
         ColumnConstraints column1 = new ColumnConstraints();
@@ -59,12 +74,21 @@ public class Chat implements Ui {
     }
 
     @Override
-    public void displayMsg(Model.ChatMessage msg) {
-        msgs.addAll(msg.getTimestamp() + "[" + msg.getName() + "]" + ": " + msg.getText());
+    public void displayMsg(String message) {
+        Platform.runLater(() -> msgs.addAll(message));
     }
 
     @Override
-    public void setCallback(BiFunction<String, String, Void> callback) {
+    public void setCallback(BiConsumer<String, String> callback) {
         this.callback = callback;
+    }
+
+    private void sendMessage(String time, TextField message) {
+        msgs.add("<" + time + ">" + "[" + userName + "]" + ": " + message.getCharacters().toString());
+        if (callback != null) {
+            callback.accept(userName, message.getCharacters().toString());
+        }
+        message.clear();
+        message.requestFocus();
     }
 }

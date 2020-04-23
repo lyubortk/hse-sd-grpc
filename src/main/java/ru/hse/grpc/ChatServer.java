@@ -16,9 +16,11 @@ public class ChatServer extends ChatGrpc.ChatImplBase {
     private final String name;
     private final AtomicReference<StreamObserver<Model.ChatMessage>> responseObserverReference = new AtomicReference<>();
     private final AtomicBoolean finished = new AtomicBoolean(false);
+    private final Ui ui;
 
-    public ChatServer(String name) {
+    public ChatServer(String name, Ui ui) {
         this.name = name;
+        this.ui = ui;
     }
 
     public AtomicReference<StreamObserver<Model.ChatMessage>> getResponseObserverReference() {
@@ -44,7 +46,7 @@ public class ChatServer extends ChatGrpc.ChatImplBase {
                 DateFormat simple = new SimpleDateFormat("dd MMM yyyy HH:mm:ss:SSS Z");
                 Date result = new Date(timeStamp);
                 String time = simple.format(result);
-                System.out.println("<" + time + ">: [" + value.getName() + "]: " + value.getText());
+                ui.displayMsg("<" + time + ">: [" + value.getName() + "]: " + value.getText());
             }
 
             @Override
@@ -61,31 +63,20 @@ public class ChatServer extends ChatGrpc.ChatImplBase {
         };
     }
 
-    public static void run(String name, int port) throws IOException, InterruptedException {
-        ChatServer serverImpl = new ChatServer(name);
+    public static void run(String name, int port, Ui ui) throws IOException, InterruptedException {
+        ChatServer serverImpl = new ChatServer(name, ui);
         Server server = ServerBuilder.forPort(port).addService(serverImpl).build();
         server.start();
 
-        Scanner scanner = new Scanner(System.in);
-        while (scanner.hasNextLine()) {
-            String line = scanner.nextLine();
-            if (serverImpl.getFinished().get()) {
-                break;
-            }
+        ui.setCallback((userName, msg) -> {
             var observer = serverImpl.responseObserverReference.get();
             if (observer != null) {
                 observer.onNext(Model.ChatMessage.newBuilder()
-                        .setName(name)
-                        .setText(line)
+                        .setName(userName)
+                        .setText(msg)
                         .setTimestamp(System.currentTimeMillis())
                         .build());
             }
-        }
-        var observer = serverImpl.responseObserverReference.get();
-        if (observer != null) {
-            observer.onCompleted();
-        }
-        server.shutdownNow();
-        server.awaitTermination();
+        });
     }
 }

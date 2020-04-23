@@ -21,10 +21,6 @@ public class Main extends Application {
     }
 
     public static void main(String[] args) {
-        if (args.length < 2) {
-            printUsage();
-        }
-
         launch();
     }
 
@@ -81,12 +77,18 @@ public class Main extends Application {
 
         Button start = new Button("Start");
         start.setOnMouseClicked(event -> {
-            new Chat(userName).start(stage);
-            try {
-                ChatClient.run(userName, tfServer.getCharacters().toString(), Integer.parseInt(tfPort.getCharacters().toString()));
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+            Chat chat = new Chat(userName);
+            new Thread(() -> {
+                try {
+                    ChatClient.run(userName,
+                            tfServer.getCharacters().toString(),
+                            Integer.parseInt(tfPort.getCharacters().toString()),
+                            chat);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }).start();
+            chat.start(stage);
         });
 
         grid.add(lblServer, 0, 0);
@@ -113,12 +115,17 @@ public class Main extends Application {
 
         Button start = new Button("Start");
         start.setOnMouseClicked(event -> {
-            new Chat(userName).start(stage);
-            try {
-                ChatServer.run(userName, Integer.parseInt(tfPort.getCharacters().toString()));
-            } catch (IOException | InterruptedException e) {
-                e.printStackTrace();
-            }
+            Chat chat = new Chat(userName);
+            new Thread(() -> {
+                try {
+                    ChatServer.run(userName,
+                            Integer.parseInt(tfPort.getCharacters().toString()),
+                            chat);
+                } catch (IOException | InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }).start();
+            chat.start(stage);
         });
 
         grid.add(lblPort, 0, 0);

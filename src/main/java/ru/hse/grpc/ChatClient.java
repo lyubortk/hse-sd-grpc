@@ -12,7 +12,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ChatClient {
-    public static void run(String name, String address, int port) throws InterruptedException {
+    public static void run(String name, String address, int port, Ui ui) throws InterruptedException {
         ManagedChannel channel = ManagedChannelBuilder.forAddress(address, port).usePlaintext().build();
         ChatGrpc.ChatStub service = ChatGrpc.newStub(channel);
         CountDownLatch finishedLatch = new CountDownLatch(1);
@@ -26,7 +26,7 @@ public class ChatClient {
                 DateFormat simple = new SimpleDateFormat("dd MMM yyyy HH:mm:ss:SSS Z");
                 Date result = new Date(timeStamp);
                 String time = simple.format(result);
-                System.out.println("<" + time + ">: [" + value.getName() + "]: " + value.getText());
+                ui.displayMsg("<" + time + ">: [" + value.getName() + "]: " + value.getText());
             }
 
             @Override
@@ -42,20 +42,11 @@ public class ChatClient {
                 finishedLatch.countDown();
             }
         });
-        Scanner scanner = new Scanner(System.in);
-        while (scanner.hasNextLine()) {
-            String line = scanner.nextLine();
-            if (finished.get()) {
-                break;
-            }
-            observer.onNext(Model.ChatMessage.newBuilder()
-                    .setName(name)
-                    .setText(line)
-                    .setTimestamp(System.currentTimeMillis())
-                    .build()
-            );
-        }
-        observer.onCompleted();
-        finishedLatch.await();
+        ui.setCallback((userName, message) -> observer.onNext(Model.ChatMessage.newBuilder()
+                .setName(userName)
+                .setText(message)
+                .setTimestamp(System.currentTimeMillis())
+                .build()
+        ));
     }
 }
