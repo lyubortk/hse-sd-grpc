@@ -16,17 +16,20 @@ import javafx.stage.Window;
 import java.io.IOException;
 
 public class Main extends Application {
+    public static void printUsage() {
+        System.err.println("Usage: ./gradlew run --args='username [host] port'"); //TODO
+    }
+
     public static void main(String[] args) {
+        if (args.length < 2) {
+            printUsage();
+        }
+
         launch();
     }
 
     @Override
     public void start(Stage stage) {
-        String javaVersion = System.getProperty("java.version");
-        String javafxVersion = System.getProperty("javafx.version");
-        GridPane gridPane = new GridPane();
-
-
         GridPane grid = new GridPane();
         grid.setHgap(10);
         grid.setVgap(12);
